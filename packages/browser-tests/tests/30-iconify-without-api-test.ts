@@ -12,8 +12,11 @@ const selector =
 const node1 = getNode('iconify-basic');
 const node2 = getNode('iconify-basic');
 
+// Do not observe document.body!
+Iconify.stopObserving(document.body);
+
 // Set root node
-Iconify.setRoot(node1);
+Iconify.observe(node1);
 
 describe('Testing Iconify object (without API)', () => {
 	const prefix = 'invalid-' + Date.now();
@@ -66,7 +69,6 @@ describe('Testing Iconify object (without API)', () => {
 		expect(node).to.not.be.equal(null);
 
 		const html = node.outerHTML;
-		console.log('Rendered SVG:', html);
 		expect(html.indexOf('<svg')).to.be.equal(0);
 
 		// Get HTML

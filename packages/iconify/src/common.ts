@@ -25,13 +25,16 @@ import {
 	initObserver,
 	pauseObserver,
 	resumeObserver,
+	observeNode,
+	removeObservedNode,
 } from './modules/observer';
-import { scanDOM } from './modules/scanner';
+import { scanDOM, scanElement } from './modules/scanner';
 
 // Finders
 import { addFinder } from './modules/finder';
 import { finder as iconifyFinder } from './finders/iconify';
-import { setRoot } from './modules/root';
+import { findRootNode, addRootNode, addBodyNode } from './modules/root';
+import { onReady } from './modules/ready';
 // import { finder as iconifyIconFinder } from './finders/iconify-icon';
 
 /**
@@ -167,6 +170,7 @@ export interface IconifyGlobal {
 	 */
 	addCollection: (data: IconifyJSON, provider?: string) => boolean;
 
+	/* Render icons */
 	/**
 	 * Render icons
 	 */
@@ -183,34 +187,42 @@ export interface IconifyGlobal {
 	/**
 	 * Get icon data
 	 */
-	renderIcon: typeof buildIcon;
+	renderIcon: (
+		name: string,
+		customisations: IconifyIconCustomisations
+	) => IconifyIconBuildResult | null;
 
 	/**
-	 * Replace IDs in icon body, should be used when parsing buildIcon() result
+	 * Replace IDs in icon body, should be used when parsing renderIcon() result
 	 */
-	replaceIDs: typeof replaceIDs;
+	replaceIDs: (body: string, prefix?: string | (() => string)) => string;
 
 	/* Scanner */
 	/**
 	 * Scan DOM
 	 */
-	scanDOM: typeof scanDOM;
-
-	/**
-	 * Set root node
-	 */
-	setRoot: (root: HTMLElement) => void;
+	scan: (root?: HTMLElement) => void;
 
 	/* Observer */
 	/**
+	 * Add root node
+	 */
+	observe: (root: HTMLElement) => void;
+
+	/**
+	 * Remove root node
+	 */
+	stopObserving: (root: HTMLElement) => void;
+
+	/**
 	 * Pause observer
 	 */
-	pauseObserver: typeof pauseObserver;
+	pauseObserver: (root?: HTMLElement) => void;
 
 	/**
 	 * Resume observer
 	 */
-	resumeObserver: typeof resumeObserver;
+	resumeObserver: (root?: HTMLElement) => void;
 }
 
 /**
@@ -231,7 +243,7 @@ export const IconifyCommon: IconifyGlobal = {
 
 	// List icons
 	listIcons: (provider?: string, prefix?: string) => {
-		let icons = [];
+		let allIcons = [];
 
 		// Get providers
 		let providers: string[];
@@ -245,7 +257,7 @@ export const IconifyCommon: IconifyGlobal = {
 		providers.forEach((provider) => {
 			let prefixes: string[];
 
-			if (typeof prefix === 'string') {
+			if (typeof provider === 'string' && typeof prefix === 'string') {
 				prefixes = [prefix];
 			} else {
 				prefixes = listStoredPrefixes(provider);
@@ -253,18 +265,18 @@ export const IconifyCommon: IconifyGlobal = {
 
 			prefixes.forEach((prefix) => {
 				const storage = getStorage(provider, prefix);
-				let icons = Object.keys(storage.icons).map(
+				const icons = Object.keys(storage.icons).map(
 					(name) =>
 						(provider !== '' ? '@' + provider + ':' : '') +
 						prefix +
 						':' +
 						name
 				);
-				icons = icons.concat(icons);
+				allIcons = allIcons.concat(icons);
 			});
 		});
 
-		return icons;
+		return allIcons;
 	},
 
 	// Add icon
@@ -296,30 +308,56 @@ export const IconifyCommon: IconifyGlobal = {
 	replaceIDs,
 
 	// Scan DOM
-	scanDOM,
+	scan: (root?: HTMLElement) => {
+		if (root) {
+			scanElement(root);
+		} else {
+			scanDOM();
+		}
+	},
 
-	// Set root node
-	setRoot: (root: HTMLElement) => {
-		setRoot(root);
+	// Add root node
+	observe: (root: HTMLElement) => {
+		observeNode(root);
+	},
 
-		// Restart observer
-		initObserver(scanDOM);
-
-		// Scan DOM on next tick
-		setTimeout(scanDOM);
+	// Remove root node
+	stopObserving: (root: HTMLElement) => {
+		removeObservedNode(root);
 	},
 
 	// Pause observer
-	pauseObserver,
+	pauseObserver: (root?: HTMLElement) => {
+		if (root) {
+			const node = findRootNode(root);
+			if (node) {
+				pauseObserver(node);
+			}
+		} else {
+			pauseObserver();
+		}
+	},
 
 	// Resume observer
-	resumeObserver,
+	resumeObserver: (root?: HTMLElement) => {
+		if (root) {
+			const node = findRootNode(root);
+			if (node) {
+				resumeObserver(node);
+			}
+		} else {
+			resumeObserver();
+		}
+	},
 };
 
 /**
  * Initialise stuff
  */
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+	// Add document.body node
+	addBodyNode();
+
 	// Add finder modules
 	// addFinder(iconifyIconFinder);
 	addFinder(iconifyFinder);
@@ -360,9 +398,9 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
 		}
 	}
 
-	// Load observer
+	// Load observer and scan DOM on next tick
 	setTimeout(() => {
-		// Init on next tick when entire document has been parsed
 		initObserver(scanDOM);
+		scanDOM();
 	});
 }

@@ -5,8 +5,14 @@ import { FullIconifyIcon } from '@iconify/core/lib/icon';
 import { findPlaceholders } from './finder';
 import { IconifyElementData, elementDataProperty } from './element';
 import { renderIcon } from './render';
-import { pauseObserver, resumeObserver } from './observer';
-import { getRoot } from './root';
+import { ObservedNode } from './observed-node';
+import {
+	pauseObserver,
+	resumeObserver,
+	removeObservedNode,
+	observeNode,
+} from './observer';
+import { findRootNode, addRootNode, listRootNodes } from './root';
 
 /**
  * Flag to avoid scanning DOM too often
@@ -46,13 +52,29 @@ const compareIcons = (
 };
 
 /**
+ * Scan node for placeholders
+ */
+export function scanElement(root: HTMLElement): void {
+	// Add temporary node
+	let node = findRootNode(root);
+	if (!node) {
+		scanDOM(
+			{
+				node: root,
+				temporary: true,
+			},
+			true
+		);
+	} else {
+		scanDOM(node);
+	}
+}
+
+/**
  * Scan DOM for placeholders
  */
-export function scanDOM(root?: HTMLElement): void {
+export function scanDOM(node?: ObservedNode, addTempNode = false): void {
 	scanQueued = false;
-
-	// Observer
-	let paused = false;
 
 	// List of icons to load: [provider][prefix][name] = boolean
 	const loadIcons: Record<
@@ -60,93 +82,123 @@ export function scanDOM(root?: HTMLElement): void {
 		Record<string, Record<string, boolean>>
 	> = Object.create(null);
 
-	// Get root node and placeholders
-	if (!root) {
-		root = getRoot();
-	}
-	findPlaceholders(root).forEach((item) => {
-		const element = item.element;
-		const iconName = item.name;
-		const provider = iconName.provider;
-		const prefix = iconName.prefix;
-		const name = iconName.name;
-		let data: IconifyElementData = element[elementDataProperty];
+	// Get placeholders
+	(node ? [node] : listRootNodes()).forEach((node) => {
+		const root = typeof node.node === 'function' ? node.node() : node.node;
 
-		// Icon has not been updated since last scan
-		if (data !== void 0 && compareIcons(data.name, iconName)) {
-			// Icon name was not changed and data is set - quickly return if icon is missing or still loading
-			switch (data.status) {
-				case 'missing':
-					return;
-
-				case 'loading':
-					if (
-						coreModules.api &&
-						coreModules.api.isPending({ provider, prefix, name })
-					) {
-						// Pending
-						return;
-					}
-			}
-		}
-
-		// Check icon
-		const storage = getStorage(provider, prefix);
-		if (storage.icons[name] !== void 0) {
-			// Icon exists - replace placeholder
-			if (!paused) {
-				pauseObserver();
-				paused = true;
-			}
-
-			// Get customisations
-			const customisations =
-				item.customisations !== void 0
-					? item.customisations
-					: item.finder.customisations(element);
-
-			// Render icon
-			renderIcon(
-				item,
-				customisations,
-				getIcon(storage, name) as FullIconifyIcon
-			);
-
+		if (!root || !root.querySelectorAll) {
 			return;
 		}
 
-		if (storage.missing[name]) {
-			// Mark as missing
+		// Track placeholders
+		let hasPlaceholders = false;
+
+		// Observer
+		let paused = false;
+
+		// Find placeholders
+		findPlaceholders(root).forEach((item) => {
+			const element = item.element;
+			const iconName = item.name;
+			const provider = iconName.provider;
+			const prefix = iconName.prefix;
+			const name = iconName.name;
+			let data: IconifyElementData = element[elementDataProperty];
+
+			// Icon has not been updated since last scan
+			if (data !== void 0 && compareIcons(data.name, iconName)) {
+				// Icon name was not changed and data is set - quickly return if icon is missing or still loading
+				switch (data.status) {
+					case 'missing':
+						return;
+
+					case 'loading':
+						if (
+							coreModules.api &&
+							coreModules.api.isPending({
+								provider,
+								prefix,
+								name,
+							})
+						) {
+							// Pending
+							hasPlaceholders = true;
+							return;
+						}
+				}
+			}
+
+			// Check icon
+			const storage = getStorage(provider, prefix);
+			if (storage.icons[name] !== void 0) {
+				// Icon exists - pause observer before replacing placeholder
+				if (!paused && node.observer) {
+					pauseObserver(node);
+					paused = true;
+				}
+
+				// Get customisations
+				const customisations =
+					item.customisations !== void 0
+						? item.customisations
+						: item.finder.customisations(element);
+
+				// Render icon
+				renderIcon(
+					item,
+					customisations,
+					getIcon(storage, name) as FullIconifyIcon
+				);
+
+				return;
+			}
+
+			if (storage.missing[name]) {
+				// Mark as missing
+				data = {
+					name: iconName,
+					status: 'missing',
+					customisations: {},
+				};
+				element[elementDataProperty] = data;
+				return;
+			}
+
+			if (coreModules.api) {
+				if (!coreModules.api.isPending({ provider, prefix, name })) {
+					// Add icon to loading queue
+					if (loadIcons[provider] === void 0) {
+						loadIcons[provider] = Object.create(null);
+					}
+					const providerLoadIcons = loadIcons[provider];
+					if (providerLoadIcons[prefix] === void 0) {
+						providerLoadIcons[prefix] = Object.create(null);
+					}
+					providerLoadIcons[prefix][name] = true;
+				}
+			}
+
+			// Mark as loading
 			data = {
 				name: iconName,
-				status: 'missing',
+				status: 'loading',
 				customisations: {},
 			};
 			element[elementDataProperty] = data;
-			return;
-		}
+			hasPlaceholders = true;
+		});
 
-		if (coreModules.api) {
-			if (!coreModules.api.isPending({ provider, prefix, name })) {
-				// Add icon to loading queue
-				if (loadIcons[provider] === void 0) {
-					loadIcons[provider] = Object.create(null);
-				}
-				const providerLoadIcons = loadIcons[provider];
-				if (providerLoadIcons[prefix] === void 0) {
-					providerLoadIcons[prefix] = Object.create(null);
-				}
-				providerLoadIcons[prefix][name] = true;
-			}
+		// Node stuff
+		if (node.temporary && !hasPlaceholders) {
+			// Remove temporary node
+			removeObservedNode(root);
+		} else if (addTempNode && hasPlaceholders) {
+			// Add new temporary node
+			observeNode(root, true);
+		} else if (paused && node.observer) {
+			// Resume observer
+			resumeObserver(node);
 		}
-
-		// Mark as loading
-		data = {
-			name: iconName,
-			status: 'loading',
-			customisations: {},
-		};
-		element[elementDataProperty] = data;
 	});
 
 	// Load icons
@@ -168,9 +220,5 @@ export function scanDOM(root?: HTMLElement): void {
 				);
 			});
 		});
-	}
-
-	if (paused) {
-		resumeObserver();
 	}
 }

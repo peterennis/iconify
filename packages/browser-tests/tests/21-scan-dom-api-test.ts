@@ -1,7 +1,7 @@
 import mocha from 'mocha';
 import chai from 'chai';
 
-import { getNode } from './node';
+import { getNode, setRoot } from './node';
 import { addFinder } from '@iconify/iconify/lib/modules/finder';
 import { FakeData, setFakeData, prepareQuery, sendQuery } from './fake-api';
 import { API } from '@iconify/core/lib/api/';
@@ -10,8 +10,8 @@ import { setAPIConfig } from '@iconify/core/lib/api/config';
 import { coreModules } from '@iconify/core/lib/modules';
 import { finder as iconifyFinder } from '@iconify/iconify/lib/finders/iconify';
 import { finder as iconifyIconFinder } from '@iconify/iconify/lib/finders/iconify-icon';
-import { setRoot } from '@iconify/iconify/lib/modules/root';
-import { scanDOM } from '@iconify/iconify/lib/modules/scanner';
+import { listRootNodes } from '@iconify/iconify/lib/modules/root';
+import { scanDOM, scanElement } from '@iconify/iconify/lib/modules/scanner';
 
 const expect = chai.expect;
 
@@ -86,6 +86,7 @@ describe('Scanning DOM with API', () => {
 		setFakeData(provider, prefix2, data2);
 
 		const node = getNode('scan-dom');
+
 		node.innerHTML =
 			'<div><p>Testing scanning DOM with API</p><ul>' +
 			'<li>Inline icons:' +
@@ -114,9 +115,15 @@ describe('Scanning DOM with API', () => {
 			'</li>' +
 			'</ul></div>';
 
+		// Scan DOM
 		setRoot(node);
-
 		scanDOM();
+
+		// Test listRootNodes
+		const nodes = listRootNodes();
+		expect(nodes.length).to.be.equal(1);
+		expect(nodes[0].node).to.be.equal(node);
+		expect(nodes[0].temporary).to.be.equal(false);
 
 		// First API response should have loaded
 		setTimeout(() => {
@@ -241,9 +248,15 @@ describe('Scanning DOM with API', () => {
 			'</li>' +
 			'</ul></div>';
 
+		// Scan DOM
 		setRoot(node);
-
 		scanDOM();
+
+		// Test listRootNodes
+		const nodes = listRootNodes();
+		expect(nodes.length).to.be.equal(1);
+		expect(nodes[0].node).to.be.equal(node);
+		expect(nodes[0].temporary).to.be.equal(false);
 
 		// Make sure no icons were rendered yet
 		const elements = node.querySelectorAll('svg.iconify');
@@ -369,8 +382,8 @@ describe('Scanning DOM with API', () => {
 			'</li>' +
 			'</ul></div>';
 
+		// Scan DOM
 		setRoot(node);
-
 		scanDOM();
 
 		// Change icon name
@@ -390,5 +403,79 @@ describe('Scanning DOM with API', () => {
 			expect(elements.length).to.be.equal(3);
 			done();
 		}, 700);
+	});
+
+	it('Unattached DOM node', (done) => {
+		const fakeRoot = getNode('scan-dom-unattached');
+		const provider = nextPrefix();
+		const prefix = nextPrefix();
+
+		// Set fake API hosts to make test reliable
+		setAPIConfig(provider, {
+			resources: ['https://api1.local', 'https://api2.local'],
+		});
+
+		// Load icons after 100ms
+		const data: FakeData = {
+			icons: ['home'],
+			delay: 100,
+			data: {
+				prefix,
+				icons: {
+					home: {
+						body:
+							'<path d="M10 20v-6h4v6h5v-8h3L12 3L2 12h3v8h5z" fill="currentColor"/>',
+					},
+				},
+				width: 24,
+				height: 24,
+			},
+		};
+		setFakeData(provider, prefix, data);
+
+		const node = document.createElement('div');
+		node.innerHTML =
+			'Icon:' +
+			'   <span class="iconify" data-icon="@' +
+			provider +
+			':' +
+			prefix +
+			':home"></span>';
+
+		// Set root node, test nodes list
+		setRoot(fakeRoot);
+
+		// Test listRootNodes
+		let nodes = listRootNodes();
+		expect(nodes.length).to.be.equal(1);
+		expect(nodes[0].node).to.be.equal(fakeRoot);
+		expect(nodes[0].temporary).to.be.equal(false);
+
+		// Scan different node
+		scanElement(node);
+
+		// Test listRootNodes
+		nodes = listRootNodes();
+		expect(nodes.length).to.be.equal(2);
+		expect(nodes[0].node).to.be.equal(fakeRoot);
+		expect(nodes[1].node).to.be.equal(node);
+		expect(nodes[1].temporary).to.be.equal(true);
+
+		// API response should have loaded
+		setTimeout(() => {
+			const elements = node.querySelectorAll('svg.iconify');
+			expect(elements.length).to.be.equal(
+				1,
+				'Expected to find 1 rendered SVG element'
+			);
+
+			// Test nodes list: temporary node should have been removed
+			nodes = listRootNodes();
+			expect(nodes.length).to.be.equal(1);
+			expect(nodes[0].node).to.be.equal(fakeRoot);
+
+			// Done
+			done();
+		}, 200);
 	});
 });

@@ -1,16 +1,77 @@
-// Root element
-let root: HTMLElement;
+import { ObservedNode } from './observed-node';
 
 /**
- * Get root element
+ * List of root nodes
  */
-export function getRoot(): HTMLElement {
-	return root ? root : (document.querySelector('body') as HTMLElement);
+let nodes: ObservedNode[] = [];
+
+/**
+ * Find node
+ */
+export function findRootNode(node: HTMLElement): ObservedNode | undefined {
+	for (let i = 0; i < nodes.length; i++) {
+		const item = nodes[i];
+		let root = typeof item.node === 'function' ? item.node() : item.node;
+		if (root === node) {
+			return item;
+		}
+	}
 }
 
 /**
- * Set root element
+ * Add extra root node
  */
-export function setRoot(node: HTMLElement): void {
-	root = node;
+export function addRootNode(
+	root: HTMLElement,
+	autoRemove = false
+): ObservedNode {
+	let node = findRootNode(root);
+	if (node) {
+		// Node already exist: switch type if needed
+		if (node.temporary) {
+			node.temporary = autoRemove;
+		}
+		return node;
+	}
+
+	// Create item, add it to list, start observer
+	node = {
+		node: root,
+		temporary: autoRemove,
+	};
+	nodes.push(node);
+
+	return node;
+}
+
+/**
+ * Add document.body node
+ */
+export function addBodyNode(): ObservedNode {
+	if (document.body) {
+		return addRootNode(document.body);
+	}
+	nodes.push({
+		node: () => {
+			return document.body;
+		},
+	});
+}
+
+/**
+ * Remove root node
+ */
+export function removeRootNode(root: HTMLElement): void {
+	nodes = nodes.filter((node) => {
+		const element =
+			typeof node.node === 'function' ? node.node() : node.node;
+		return root !== element;
+	});
+}
+
+/**
+ * Get list of root nodes
+ */
+export function listRootNodes(): ObservedNode[] {
+	return nodes;
 }

@@ -12,8 +12,11 @@ const selector =
 const node1 = getNode('iconify-basic');
 const node2 = getNode('iconify-basic');
 
+// Do not observe document.body!
+Iconify.stopObserving(document.body);
+
 // Set root node
-Iconify.setRoot(node1);
+Iconify.observe(node1);
 
 describe('Testing Iconify object', () => {
 	const prefix = 'invalid-' + Date.now();
@@ -59,6 +62,16 @@ describe('Testing Iconify object', () => {
 		);
 	});
 
+	it('Check listIcons', () => {
+		expect(Iconify.listIcons('', prefix)).to.be.eql([
+			prefix + ':account-box',
+			prefix + ':account-cash',
+			prefix + ':account',
+			prefix + ':home',
+			prefix + ':id-test',
+		]);
+	});
+
 	it('Get SVG node', () => {
 		const node = Iconify.renderSVG(prefix + ':account', {
 			inline: true,
@@ -66,7 +79,6 @@ describe('Testing Iconify object', () => {
 		expect(node).to.not.be.equal(null);
 
 		const html = node.outerHTML;
-		console.log('Rendered SVG:', html);
 		expect(html.indexOf('<svg')).to.be.equal(0);
 
 		// Get HTML
