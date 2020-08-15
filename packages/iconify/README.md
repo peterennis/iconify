@@ -21,13 +21,13 @@ Iconify SVG framework is designed to be as easy to use as possible.
 Add this line to your page to load Iconify SVG framework (you can add it to `<head>` section of the page or before `</body>`):
 
 ```html
-<script src="https://code.iconify.design/2/2.0.0-beta.5/iconify.min.js"></script>
+<script src="https://code.iconify.design/2/2.0.0-beta.6/iconify.min.js"></script>
 ```
 
 or
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@iconify/iconify@2.0.0-beta.5/dist/iconify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@iconify/iconify@2.0.0-beta.6/dist/iconify.min.js"></script>
 ```
 
 or, if you are building a project with something like WebPack or Rollup, you can include the script by installing `@iconify/iconify` as a dependency and importing it in your project:
@@ -53,9 +53,20 @@ or this:
 
 &nbsp;&nbsp;&nbsp; ![Screenshot](https://iconify.design/assets/images/inline-sample.png)
 
-That is it. Change `data-icon` value to the name of the icon you want to use. There are over 50,000 premade icons to choose from, including FontAwesome, Material Design Icons, Entypo+, Box Icons, Unicons and even several emoji sets.
+That is it. Change `data-icon` value to the name of the icon you want to use. There are over 50,000 premade icons to choose from, including FontAwesome, Material Design Icons, Tabler Icons, Box Icons, Unicons, Bootstrap Icons and even several emoji sets.
 
-Do you want to make your own icon sets? Tools for making custom icon sets are available on GitHub. See documentation.
+Do you want to make your own icon sets? Everything you need is [available on GitHub](https://github.com/iconify): tools for creating custom icon sets, Iconify API application and documentation to help you.
+
+## Full documentation
+
+Below is a shortened version of documentation.
+
+Full documentation is available on Iconify website:
+
+-   [SVG framework documentation](https://docs.iconify.design/implementations/svg-framework/).
+-   [Iconify API documentation](https://docs.iconify.design/sources/api/).
+-   [Creating icon bundles](https://docs.iconify.design/sources/bundles/).
+-   [Iconify Tools documentation](https://docs.iconify.design/tools/node/).
 
 ## How does it work?
 

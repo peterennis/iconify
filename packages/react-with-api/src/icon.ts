@@ -25,8 +25,7 @@ import {
 	getIcon,
 	addIcon as addIconToStorage,
 	addIconSet,
-	listStoredProviders,
-	listStoredPrefixes,
+	listIcons,
 } from '@iconify/core/lib/storage';
 import { calcSize } from '@iconify/core/lib/builder/calc-size';
 import { IconifyIcon, FullIconifyIcon } from '@iconify/core/lib/icon';
@@ -132,7 +131,7 @@ export type IconifyCacheType = 'local' | 'session' | 'all';
 /**
  * Toggle cache
  */
-export function enableCache(storage: IconifyCacheType, value: boolean): void {
+function toggleCache(storage: IconifyCacheType, value: boolean): void {
 	switch (storage) {
 		case 'local':
 		case 'session':
@@ -145,6 +144,14 @@ export function enableCache(storage: IconifyCacheType, value: boolean): void {
 			}
 			break;
 	}
+}
+
+export function enableCache(storage: IconifyCacheType, value?: boolean): void {
+	toggleCache(storage, typeof value === 'boolean' ? value : true);
+}
+
+export function disableCache(storage: IconifyCacheType): void {
+	toggleCache(storage, false);
 }
 
 /**
@@ -185,42 +192,7 @@ export const loadIcons: IconifyLoadIcons = API.loadIcons;
 /**
  * List available icons
  */
-export function listIcons(provider?: string, prefix?: string): string[] {
-	let icons = [];
-
-	// Get providers
-	let providers: string[];
-	if (typeof provider === 'string') {
-		providers = [provider];
-	} else {
-		providers = listStoredProviders();
-	}
-
-	// Get all icons
-	providers.forEach((provider) => {
-		let prefixes: string[];
-
-		if (typeof prefix === 'string') {
-			prefixes = [prefix];
-		} else {
-			prefixes = listStoredPrefixes(provider);
-		}
-
-		prefixes.forEach((prefix) => {
-			const storage = getStorage(provider, prefix);
-			let icons = Object.keys(storage.icons).map(
-				(name) =>
-					(provider !== '' ? '@' + provider + ':' : '') +
-					prefix +
-					':' +
-					name
-			);
-			icons = icons.concat(icons);
-		});
-	});
-
-	return icons;
-}
+export { listIcons };
 
 /**
  * Add one icon
