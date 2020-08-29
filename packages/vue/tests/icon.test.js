@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import IconifyIcon from '../';
+import { Icon, addIcon } from '../';
 
 const iconData = {
 	body:
@@ -15,84 +15,93 @@ const iconDataWithID = {
 	height: 128,
 };
 
-// Spacing for HTML matches
-const spacing = (count) => {
-	return '\n' + '  '.repeat(count);
-};
+/*
+
+Note: findComponent() tests are temporarily disabled because it is bugged in current version of test-utils
+
+*/
 
 describe('Mounting component', () => {
 	test('with wrapper', () => {
 		const Wrapper = {
-			components: { IconifyIcon },
-			template: `<iconify-icon />`,
+			components: { Icon },
+			template: `<Icon />`,
 		};
 
 		const wrapper = mount(Wrapper, {});
-		const item = wrapper.find(IconifyIcon);
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 	});
 
 	test('without wrapper', () => {
-		const wrapper = mount(IconifyIcon, {});
-		const item = wrapper.find(IconifyIcon);
+		const wrapper = mount(Icon, {});
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16"></svg>'
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16"></svg>'
 		);
 	});
 });
 
 describe('Rendering icon', () => {
 	test('as object', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' />`,
+			data() {
+				return {
 					icon: iconData,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('as string', () => {
 		const iconName = 'test-string';
-		IconifyIcon.addIcon(iconName, iconData);
+		addIcon(iconName, iconData);
 
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' />`,
+			data() {
+				return {
 					icon: iconName,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('replacing id', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' />`,
+			data() {
+				return {
 					icon: iconDataWithID,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).not.toMatch('id="ssvg-id-1st-place-medala"');
 	});
@@ -100,83 +109,86 @@ describe('Rendering icon', () => {
 
 describe('Passing attributes', () => {
 	test('title', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' title='Icon!' />`,
+			data() {
+				return {
 					icon: iconData,
-					title: 'Icon!',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" title="Icon!" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" title="Icon!" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('aria-hidden', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
-					'icon': iconData,
-					'aria-hidden': false,
-				},
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :aria-hidden='false' />`,
+			data() {
+				return {
+					icon: iconData,
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" focusable="false" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('ariaHidden', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :ariaHidden='false' />`,
+			data() {
+				return {
 					icon: iconData,
-					ariaHidden: false,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" focusable="false" role="img" width="1em" height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('attributes that cannot change', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' viewBox='0 0 0 0' preserveAspectRatio='none' />`,
+			data() {
+				return {
 					icon: iconData,
-					viewBox: '0 0 0 0',
-					preserveAspectRatio: 'none',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
 			// same values, but different order
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" width="1em" height="1em">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" width="1em" height="1em">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
@@ -184,62 +196,68 @@ describe('Passing attributes', () => {
 
 describe('Dimensions', () => {
 	test('height', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :height='height' />`,
+			data() {
+				return {
 					icon: iconData,
 					height: 24,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="24" height="24" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="24" height="24" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('width and height', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :width='width' :height='height' />`,
+			data() {
+				return {
 					icon: iconData,
 					width: 32, // as number
 					height: '48', // as string
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="32" height="48" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="32" height="48" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
 
 	test('auto', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :height='height' />`,
+			data() {
+				return {
 					icon: iconData,
 					height: 'auto',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toStrictEqual(
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" width="24" height="24" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
-				spacing(1) +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" role="img" width="24" height="24" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">' +
 				'<path d="M4 19h16v2H4zm5-4h11v2H9zm-5-4h16v2H4zm0-8h16v2H4zm5 4h11v2H9z" fill="currentColor"></path>' +
-				spacing(0) +
 				'</svg>'
 		);
 	});
@@ -247,29 +265,36 @@ describe('Dimensions', () => {
 
 describe('Rotation', () => {
 	test('number', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :rotate='rotate' />`,
+			data() {
+				return {
 					icon: iconData,
 					rotate: 1,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('rotate(90 ');
 	});
 
 	test('string', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' rotate='270deg' />`,
+			data() {
+				return {
 					icon: iconData,
-					rotate: '270deg',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('rotate(-90 ');
 	});
@@ -277,151 +302,179 @@ describe('Rotation', () => {
 
 describe('Flip', () => {
 	test('boolean', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :horizontalFlip='horizontalFlip' />`,
+			data() {
+				return {
 					icon: iconData,
 					horizontalFlip: true,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('scale(-1 1)');
 	});
 
 	test('string', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' flip='vertical' />`,
+			data() {
+				return {
 					icon: iconData,
-					flip: 'vertical',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('scale(1 -1)');
 	});
 
 	test('string and boolean', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' flip='horizontal' :verticalFlip='true' />`,
+			data() {
+				return {
 					icon: iconData,
-					flip: 'horizontal',
-					verticalFlip: true,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		// horizontal + vertical = 180deg rotation
 		expect(item.html()).toMatch('rotate(180 ');
 	});
 
 	test('string for boolean attribute', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' horizontalFlip='true' />`,
+			data() {
+				return {
 					icon: iconData,
-					horizontalFlip: 'true',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('scale(-1 1)');
 	});
 
 	test('shorthand and boolean', () => {
 		// 'flip' is processed after 'hFlip', overwriting value
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' flip='horizontal' :hFlip='false' />`,
+			data() {
+				return {
 					icon: iconData,
-					flip: 'horizontal',
-					hFlip: false,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('scale(-1 1)');
 	});
 
 	test('shorthand and boolean as string', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' flip='vertical' horizontalFlip='true' />`,
+			data() {
+				return {
 					icon: iconData,
-					flip: 'vertical',
-					horizontalFlip: 'true',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		// horizontal + vertical = 180deg rotation
 		expect(item.html()).toMatch('rotate(180 ');
 	});
 
 	test('wrong case', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' :verticalflip='verticalflip' :horizontalflip='true' />`,
+			data() {
+				return {
 					icon: iconData,
 					verticalflip: true,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).not.toMatch('scale(');
+		expect(item.html()).not.toMatch('rotate(');
 	});
 });
 
 describe('Alignment and slice', () => {
 	test('vAlign and slice', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' vAlign='top' :slice='true' />`,
+			data() {
+				return {
 					icon: iconData,
-					vAlign: 'top',
-					slice: true,
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('preserveAspectRatio="xMidYMin slice"');
 	});
 
 	test('string', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' align='left bottom' />`,
+			data() {
+				return {
 					icon: iconData,
-					align: 'left bottom',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('preserveAspectRatio="xMinYMax meet"');
 	});
 
 	test('Alignment aliases', () => {
-		const wrapper = mount(IconifyIcon, {
-			context: {
-				props: {
+		const Wrapper = {
+			components: { Icon },
+			template: `<Icon :icon='icon' verticalAlign='top' horizontalAlign='right' />`,
+			data() {
+				return {
 					icon: iconData,
-					verticalAlign: 'top',
-					horizontalAlign: 'right',
-				},
+				};
 			},
-		});
-		const item = wrapper.find(IconifyIcon);
+		};
+		const wrapper = mount(Wrapper, {});
+
+		const item = wrapper; //.findComponent(Icon);
 		expect(item.exists()).toBe(true);
 		expect(item.html()).toMatch('preserveAspectRatio="xMaxYMin meet"');
 	});
