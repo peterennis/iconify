@@ -5,7 +5,7 @@ Iconify for React is not yet another icon component! There are many of them alre
 Iconify is the most versatile icon framework.
 
 -   Unified icon framework that can be used with any icon library.
--   Out of the box includes 60+ icon sets with 50,000 icons.
+-   Out of the box includes 80+ icon sets with more than 70,000 icons.
 -   Embed icons in HTML with SVG framework or components for front-end frameworks.
 -   Embed icons in designs with plug-ins for Figma, Sketch and Adobe XD.
 -   Add icon search to your applications with Iconify Icon Finder.
@@ -62,7 +62,7 @@ With this method the icon needs to be added only once. That means if you have mu
 
 ```jsx
 import React from 'react';
-import { Icon, InlineIcon, addIcon } from '@iconify/react';
+import { Icon, addIcon } from '@iconify/react';
 import homeIcon from '@iconify-icons/mdi-light/home';
 
 addIcon('home', homeIcon);
@@ -76,6 +76,33 @@ export function MyComponent() {
 }
 ```
 
+Instead of adding icons one by one using `addIcon` function, you can import an entire icon set using `addCollection` function:
+
+```jsx
+import React from 'react';
+import { Icon, addCollection } from '@iconify/react';
+
+// Import requires bundler that can import JSON files
+import jamIcons from '@iconify/json/json/jam.json';
+
+// Function automatically adds prefix from icon set, which in this case is 'jam', followed by ':', so
+// icon names added by function should be called with prefix, such as 'jam:home'
+addCollection(jamIcons);
+
+// Example without prefix, all icons will have names as is, such as 'home'
+// addCollection(jamIcons, false);
+
+export function MyComponent() {
+	return (
+		<div>
+			<Icon icon="jam:home" />
+		</div>
+	);
+}
+```
+
+Example above imports an entire icon set. To learn how to create smaller bundles, check out Iconify documentation: https://docs.iconify.design/sources/bundles/
+
 ## Icon and InlineIcon
 
 Both components are the same, the only difference is `InlineIcon` has a negative vertical alignment, so it behaves like a glyph.
@@ -88,7 +115,7 @@ Visual example to show the difference between inline and block modes:
 
 ## Icon component properties
 
-`icon` property is mandatory. It tells component what icon to render. If the property value is invalid, the component will render an empty icon. The value can be a string containing the icon name (icon must be registered before use by calling `addIcon`, see instructions above) or an object containing the icon data.
+`icon` property is mandatory. It tells component what icon to render. If the property value is invalid, the component will render an empty icon. The value can be a string containing the icon name (icon must be registered before use by calling `addIcon` or `addCollection`, see instructions above) or an object containing the icon data.
 
 The icon component has the following optional properties:
 
@@ -311,7 +338,7 @@ Example showing the icon behaviour when `slice` is enabled with various alignmen
 
 ## Icon Packages
 
-As of version 1.1.0 this package no longer includes icons. There are over 40k icons, each in its own file. That takes a lot of disc space. Because of that icons were moved to multiple separate packages, one package per icon set.
+As of version 1.1.0 this package no longer includes icons. There are over 70k icons, each in its own file. That takes a lot of disc space. Because of that icons were moved to multiple separate packages, one package per icon set.
 
 You can find all available icons at https://iconify.design/icon-sets/
 
