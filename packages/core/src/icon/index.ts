@@ -22,5 +22,5 @@ export const iconDefaults: FullIconifyIcon = Object.freeze({
  * Create new icon with all properties
  */
 export function fullIcon(icon: IconifyIcon): FullIconifyIcon {
-	return merge(iconDefaults, icon) as FullIconifyIcon;
+	return merge(iconDefaults, icon as FullIconifyIcon) as FullIconifyIcon;
 }

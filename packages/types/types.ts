@@ -53,7 +53,9 @@ export interface IconifyTransformations {
  */
 export interface IconifyOptional
 	extends IconifyDimenisons,
-		IconifyTransformations {}
+		IconifyTransformations {
+	//
+}
 
 /**
  * Alias.
@@ -79,19 +81,32 @@ export interface IconifyIcon extends IconifyOptional {
 }
 
 /**
+ * Icon with optional parameters that are provided by API and affect only search
+ */
+interface APIIconAttributes {
+	// True if icon is hidden.
+	// Used in icon sets to keep icons that no longer exist, but should still be accessible
+	// from API, preventing websites from breaking when icon is removed by developer.
+	hidden?: boolean;
+}
+
+export interface ExtendedIconifyIcon extends IconifyIcon, APIIconAttributes {}
+export interface ExtendedIconifyAlias extends IconifyAlias, APIIconAttributes {}
+
+/**
  * "icons" field of JSON file.
  */
 export interface IconifyIcons {
-	// Index is name of icon, without prefix. Value is IconifyIcon object.
-	[index: string]: IconifyIcon;
+	// Index is name of icon, without prefix. Value is ExtendedIconifyIcon object.
+	[index: string]: ExtendedIconifyIcon;
 }
 
 /**
  * "aliases" field of JSON file.
  */
 export interface IconifyAliases {
-	// Index is name of icon, without prefix. Value is IconifyAlias object.
-	[index: string]: IconifyAlias;
+	// Index is name of icon, without prefix. Value is ExtendedIconifyAlias object.
+	[index: string]: ExtendedIconifyAlias;
 }
 
 /**
