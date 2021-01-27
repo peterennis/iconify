@@ -2,9 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import 'mocha';
 import { expect } from 'chai';
-import { RedundancyPendingItem } from '@cyberalien/redundancy';
+import type { PendingQueryItem } from '@cyberalien/redundancy';
 import { setAPIConfig } from '../../lib/api/config';
-import { setAPIModule, APIQueryParams } from '../../lib/api/modules';
+import type { APIQueryParams } from '../../lib/api/modules';
+import { setAPIModule } from '../../lib/api/modules';
 import { API } from '../../lib/api/';
 
 describe('Testing API loadIcons', () => {
@@ -56,7 +57,7 @@ describe('Testing API loadIcons', () => {
 		const sendQuery = (
 			host: string,
 			params: APIQueryParams,
-			status: RedundancyPendingItem
+			item: PendingQueryItem
 		): void => {
 			// This callback should be called after prepareQuery
 			expect(asyncCounter).to.be.equal(2);
@@ -72,7 +73,7 @@ describe('Testing API loadIcons', () => {
 			expect(params).to.be.eql(expected);
 
 			// Send data
-			status.done({
+			item.done({
 				prefix,
 				icons: {
 					icon1: {
@@ -188,7 +189,7 @@ describe('Testing API loadIcons', () => {
 		const sendQuery = (
 			host: string,
 			params: APIQueryParams,
-			status: RedundancyPendingItem
+			item: PendingQueryItem
 		): void => {
 			// Test input
 			expect(host).to.be.equal('https://api1.local');
@@ -209,7 +210,7 @@ describe('Testing API loadIcons', () => {
 					body: '<path d="" />',
 				};
 			});
-			status.done({
+			item.done({
 				prefix,
 				icons,
 			});
@@ -280,7 +281,7 @@ describe('Testing API loadIcons', () => {
 		const sendQuery = (
 			host: string,
 			params: APIQueryParams,
-			status: RedundancyPendingItem
+			item: PendingQueryItem
 		): void => {
 			queryCounter++;
 			switch (queryCounter) {
@@ -296,7 +297,7 @@ describe('Testing API loadIcons', () => {
 					expect(host).to.be.equal('https://api2.local');
 
 					// Return result
-					status.done({
+					item.done({
 						prefix,
 						icons: {
 							icon1: {
@@ -382,7 +383,7 @@ describe('Testing API loadIcons', () => {
 		const sendQuery = (
 			host: string,
 			params: APIQueryParams,
-			status: RedundancyPendingItem
+			item: PendingQueryItem
 		): void => {
 			queryCounter++;
 			switch (queryCounter) {
@@ -400,7 +401,7 @@ describe('Testing API loadIcons', () => {
 					expect(host).to.be.equal('https://api2.local');
 
 					// Return result
-					status.done({
+					item.done({
 						prefix,
 						icons: {
 							icon1: {
@@ -419,7 +420,7 @@ describe('Testing API loadIcons', () => {
 					expect(host).to.be.equal('https://api2.local');
 
 					// Return result
-					status.done({
+					item.done({
 						prefix,
 						icons: {
 							icon3: {
@@ -538,7 +539,7 @@ describe('Testing API loadIcons', () => {
 		const sendQuery = (
 			host: string,
 			params: APIQueryParams,
-			status: RedundancyPendingItem
+			item: PendingQueryItem
 		): void => {
 			queryCounter++;
 			switch (queryCounter) {
@@ -558,7 +559,7 @@ describe('Testing API loadIcons', () => {
 					expect(host).to.be.equal('https://api2.local');
 
 					// Return result
-					status.done({
+					item.done({
 						prefix: params.prefix,
 						icons: {
 							icon1: {
@@ -578,7 +579,7 @@ describe('Testing API loadIcons', () => {
 					expect(host).to.be.equal('https://api2.local');
 
 					// Return result
-					status.done({
+					item.done({
 						prefix: params.prefix,
 						icons: {
 							icon2: {

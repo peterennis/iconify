@@ -2,7 +2,7 @@
 	"name": "@iconify/core",
 	"description": "Reusable files used by multiple Iconify packages",
 	"author": "Vjacheslav Trushkin <cyberalien@gmail.com> (https://iconify.design)",
-	"version": "1.0.0-rc.3",
+	"version": "1.0.0-rc.5",
 	"license": "(Apache-2.0 OR GPL-2.0)",
 	"bugs": "https://github.com/iconify/iconify/issues",
 	"homepage": "https://iconify.design/",
@@ -13,12 +13,13 @@
 	},
 	"scripts": {
 		"clean": "rm -rf lib compiled-tests",
-		"lint": "npx eslint {src,tests}/**/*.ts",
+		"lint": "eslint {src,tests}/**/*.ts",
 		"prebuild": "npm run lint",
-		"build": "npx tsc -b",
+		"build": "tsc -b",
+		"build:src": "tsc --project src/tsconfig.json",
 		"prewatch": "npm run lint",
-		"watch": "npx tsc -b -w",
-		"test": "npx mocha tests-compiled/*/*-test.js",
+		"watch": "tsc -b -w",
+		"test": "mocha tests-compiled/*/*-test.js",
 		"pretest": "npm run build"
 	},
 	"devDependencies": {

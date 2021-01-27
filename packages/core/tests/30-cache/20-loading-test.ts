@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars-experimental */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import 'mocha';
 import { expect } from 'chai';
+import type { IconifyJSON } from '@iconify/types';
+import type { StoredItem } from '../../lib/browser-storage/';
 import {
 	loadCache,
 	count,
 	config,
 	emptyList,
-	StoredItem,
-} from '../../lib/cache/storage';
-import { getStorage, iconExists, getIcon } from '../../lib/storage';
+} from '../../lib/browser-storage/';
+import { getStorage, iconExists } from '../../lib/storage/storage';
 import {
 	nextPrefix,
 	createCache,
@@ -21,7 +20,6 @@ import {
 	hour,
 	cacheExpiration,
 } from './fake_cache';
-import { IconifyIcon, IconifyJSON } from '@iconify/types';
 
 describe('Testing loading from localStorage', () => {
 	const provider = '';

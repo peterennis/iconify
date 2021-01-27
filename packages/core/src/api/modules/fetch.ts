@@ -1,12 +1,12 @@
-import { PendingQueryItem } from '@cyberalien/redundancy';
-import {
+import type { PendingQueryItem } from '@cyberalien/redundancy';
+import type {
 	APIQueryParams,
 	IconifyAPIPrepareQuery,
 	IconifyAPISendQuery,
 	IconifyAPIModule,
 	GetIconifyAPIModule,
 } from '../modules';
-import { GetAPIConfig } from '../config';
+import type { GetAPIConfig } from '../config';
 
 /**
  * Endpoint
@@ -18,6 +18,31 @@ const endPoint = '{prefix}.json?icons={icons}';
  */
 const maxLengthCache: Record<string, number> = Object.create(null);
 const pathCache: Record<string, string> = Object.create(null);
+
+/**
+ * Get fetch module
+ */
+export function getFetch(): typeof fetch | undefined {
+	let fetchModule: typeof fetch | undefined =
+		typeof fetch === 'function' ? fetch : void 0;
+	try {
+		if (
+			typeof document === 'undefined' &&
+			typeof module.exports === 'object' &&
+			typeof require === 'function'
+		) {
+			// Attempt to load cross-fetch.
+			// Should be added as dependency when using Iconify with Node.js
+			fetchModule = require('cross-fetch');
+		}
+	} catch (err) {
+		// Do nothing
+	}
+	return fetchModule;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const fetchModule = getFetch()!;
 
 /**
  * Return API module
@@ -129,7 +154,7 @@ export const getAPIModule: GetIconifyAPIModule = (
 				.replace('{icons}', iconsList);
 
 		// console.log('API query:', host + path);
-		fetch(host + path)
+		fetchModule(host + path)
 			.then((response) => {
 				if (response.status !== 200) {
 					status.done(void 0, response.status);

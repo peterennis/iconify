@@ -2,18 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import 'mocha';
 import { expect } from 'chai';
-import { RedundancyPendingItem } from '@cyberalien/redundancy';
-import {
-	setAPIConfig,
-	getAPIConfig,
-	IconifyAPIConfig,
-} from '../../lib/api/config';
-import {
-	setAPIModule,
-	APIQueryParams,
-	getAPIModule,
-	IconifyAPIModule,
-} from '../../lib/api/modules';
+import type { PendingQueryItem } from '@cyberalien/redundancy';
+import type { IconifyAPIConfig } from '../../lib/api/config';
+import { setAPIConfig, getAPIConfig } from '../../lib/api/config';
+import type { APIQueryParams, IconifyAPIModule } from '../../lib/api/modules';
+import { setAPIModule, getAPIModule } from '../../lib/api/modules';
 
 describe('Testing API modules', () => {
 	let prefixCounter = 0;
@@ -40,7 +33,7 @@ describe('Testing API modules', () => {
 	const sendQuery = (
 		host: string,
 		params: APIQueryParams,
-		status: RedundancyPendingItem
+		item: PendingQueryItem
 	): void => {
 		throw new Error('Unexpected API call');
 	};

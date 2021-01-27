@@ -9,25 +9,34 @@ import {
 	IconifyVerticalIconAlignment,
 } from '@iconify/core/lib/customisations';
 import { IconifyIconBuildResult } from '@iconify/core/lib/builder';
-import { calcSize } from '@iconify/core/lib/builder/calc-size';
+import {
+	IconifyStorageFunctions,
+	storageFunctions,
+} from '@iconify/core/lib/storage/functions';
+import {
+	IconifyBuilderFunctions,
+	builderFunctions,
+} from '@iconify/core/lib/builder/functions';
 
 // Modules
 import { coreModules } from '@iconify/core/lib/modules';
 
 // Cache
-import { storeCache, loadCache, config } from '@iconify/core/lib/cache/storage';
+import { storeCache, loadCache } from '@iconify/core/lib/browser-storage/';
+import {
+	IconifyBrowserCacheFunctions,
+	IconifyBrowserCacheType,
+	toggleBrowserCache,
+} from '@iconify/core/lib/browser-storage/functions';
 
 // API
 import {
-	IconifyAPI,
-	IconifyExposedAPIInternals,
-	IconifyCacheType,
-} from './modules/api';
-import {
-	API,
-	getRedundancyCache,
-	IconifyAPIInternalStorage,
-} from '@iconify/core/lib/api/';
+	IconifyAPIFunctions,
+	IconifyAPIInternalFunctions,
+	APIFunctions,
+	APIInternalFunctions,
+} from '@iconify/core/lib/api/functions';
+import { API, IconifyAPIInternalStorage } from '@iconify/core/lib/api/';
 import {
 	setAPIModule,
 	IconifyAPIModule,
@@ -43,19 +52,30 @@ import {
 	GetAPIConfig,
 } from '@iconify/core/lib/api/config';
 import { getAPIModule as getJSONPAPIModule } from '@iconify/core/lib/api/modules/jsonp';
-import { getAPIModule as getFetchAPIModule } from '@iconify/core/lib/api/modules/fetch';
+import {
+	getAPIModule as getFetchAPIModule,
+	getFetch,
+} from '@iconify/core/lib/api/modules/fetch';
 import {
 	IconifyIconLoaderCallback,
 	IconifyIconLoaderAbort,
 } from '@iconify/core/lib/interfaces/loader';
 
 // Other
-import { IconifyExposedCommonInternals } from './internals';
-import { IconifyGlobal as IconifyGlobal1, IconifyCommon } from './common';
+import { IconifyCommonFunctions, commonFunctions } from './common';
 
 /**
  * Export required types
  */
+// Function sets
+export {
+	IconifyStorageFunctions,
+	IconifyBuilderFunctions,
+	IconifyBrowserCacheFunctions,
+	IconifyAPIFunctions,
+	IconifyAPIInternalFunctions,
+};
+
 // JSON stuff
 export { IconifyIcon, IconifyJSON, IconifyIconName };
 
@@ -80,102 +100,66 @@ export {
 	GetAPIConfig,
 	IconifyAPIPrepareQuery,
 	IconifyAPISendQuery,
-	IconifyCacheType,
+	IconifyBrowserCacheType,
 };
-
-/**
- * Exposed internal functions
- *
- * Used by plug-ins, such as Icon Finder
- *
- * Important: any changes published in a release must be backwards compatible.
- */
-export interface IconifyExposedInternals
-	extends IconifyExposedAPIInternals,
-		IconifyExposedCommonInternals {}
-
-/**
- * Exported functions
- */
-export interface IconifyGlobal2 extends IconifyAPI {
-	/**
-	 * Expose internal functions
-	 */
-	_internal: IconifyExposedInternals;
-}
 
 /**
  * Iconify interface
  */
-export interface IconifyGlobal extends IconifyGlobal1, IconifyGlobal2 {}
-
-// Export dependencies
-export { IconifyGlobal as IconifyGlobalCommon, IconifyAPI };
-
-function toggleCache(storage: IconifyCacheType, value: boolean): void {
-	switch (storage) {
-		case 'local':
-		case 'session':
-			config[storage] = value;
-			break;
-
-		case 'all':
-			for (const key in config) {
-				config[key] = value;
-			}
-			break;
-	}
+export interface IconifyGlobal
+	extends IconifyStorageFunctions,
+		IconifyBuilderFunctions,
+		IconifyCommonFunctions,
+		IconifyBrowserCacheFunctions,
+		IconifyAPIFunctions {
+	_api: IconifyAPIInternalFunctions;
 }
+
+/**
+ * Browser cache functions
+ */
+const browserCacheFunctions: IconifyBrowserCacheFunctions = {
+	// enableCache() has optional second parameter for backwards compatibility
+	enableCache: (storage: IconifyBrowserCacheType, enable?: boolean) =>
+		toggleBrowserCache(storage, enable !== false),
+	disableCache: (storage: IconifyBrowserCacheType) =>
+		toggleBrowserCache(storage, true),
+};
 
 /**
  * Global variable
  */
-const Iconify: IconifyGlobal = ({
-	// Load icons
-	loadIcons: API.loadIcons,
+const Iconify = ({
+	// Exposed internal API functions
+	_api: APIInternalFunctions,
+} as unknown) as IconifyGlobal;
 
-	// API providers
-	addAPIProvider: setAPIConfig,
-
-	// Toggle storage
-	enableCache: (storage: IconifyCacheType, value?: boolean) => {
-		toggleCache(storage, typeof value === 'boolean' ? value : true);
-	},
-	disableCache: (storage: IconifyCacheType) => {
-		toggleCache(storage, false);
-	},
-
-	// Exposed internal functions
-	_internal: {
-		// Calculate size
-		calculateSize: calcSize,
-
-		// Get API data
-		getAPI: getRedundancyCache,
-
-		// Get API config
-		getAPIConfig,
-
-		// Get API module
-		setAPIModule,
-	},
-} as IconifyGlobal2) as IconifyGlobal;
-
-// Merge with common functions
-for (const key in IconifyCommon) {
-	Iconify[key] = IconifyCommon[key];
-}
+// Add functions
+[
+	storageFunctions,
+	builderFunctions,
+	commonFunctions,
+	browserCacheFunctions,
+	APIFunctions,
+].forEach((list) => {
+	for (const key in list) {
+		Iconify[key] = list[key];
+	}
+});
 
 /**
  * Initialise stuff
  */
+// Check for Fetch API
+const fetchModule = getFetch();
+
 // Set API
 coreModules.api = API;
 
 let getAPIModule: GetIconifyAPIModule;
 try {
 	getAPIModule =
-		typeof fetch === 'function' && typeof Promise === 'function'
+		typeof fetchModule === 'function' && typeof Promise === 'function'
 			? getFetchAPIModule
 			: getJSONPAPIModule;
 } catch (err) {

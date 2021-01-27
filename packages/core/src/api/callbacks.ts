@@ -1,10 +1,10 @@
-import {
+import type {
 	IconifyIconLoaderCallback,
 	IconifyIconLoaderAbort,
 } from '../interfaces/loader';
-import { getStorage } from '../storage';
-import { SortedIcons } from '../icon/sort';
-import { IconifyIconSource } from '../icon/name';
+import { getStorage } from '../storage/storage';
+import type { SortedIcons } from '../icon/sort';
+import type { IconifyIconSource } from '../icon/name';
 
 /**
  * Storage for callbacks

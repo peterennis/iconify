@@ -9,11 +9,7 @@ import {
 } from '@iconify/react/lib/icon';
 
 // Core
-import {
-	stringToIcon,
-	validateIcon,
-	IconifyIconName,
-} from '@iconify/core/lib/icon/name';
+import { IconifyIconName, stringToIcon } from '@iconify/core/lib/icon/name';
 import {
 	IconifyIconCustomisations,
 	IconifyIconSize,
@@ -21,24 +17,27 @@ import {
 	IconifyVerticalIconAlignment,
 } from '@iconify/core/lib/customisations';
 import {
-	getStorage,
-	getIcon as _getIcon,
-	addIcon as addIconToStorage,
-	addIconSet,
-	listIcons,
-} from '@iconify/core/lib/storage';
-import { calcSize } from '@iconify/core/lib/builder/calc-size';
-import { IconifyIcon, FullIconifyIcon } from '@iconify/core/lib/icon';
+	IconifyStorageFunctions,
+	storageFunctions,
+	getIconData,
+} from '@iconify/core/lib/storage/functions';
+import {
+	IconifyBuilderFunctions,
+	builderFunctions,
+} from '@iconify/core/lib/builder/functions';
+import { IconifyIcon } from '@iconify/core/lib/icon';
 
 // Modules
 import { coreModules } from '@iconify/core/lib/modules';
 
 // API
+import { API, IconifyAPIInternalStorage } from '@iconify/core/lib/api/';
 import {
-	API,
-	getRedundancyCache,
-	IconifyAPIInternalStorage,
-} from '@iconify/core/lib/api/';
+	IconifyAPIFunctions,
+	IconifyAPIInternalFunctions,
+	APIFunctions,
+	APIInternalFunctions,
+} from '@iconify/core/lib/api/functions';
 import {
 	setAPIModule,
 	IconifyAPIModule,
@@ -58,15 +57,28 @@ import {
 import {
 	IconifyIconLoaderCallback,
 	IconifyIconLoaderAbort,
-	IconifyLoadIcons,
 } from '@iconify/core/lib/interfaces/loader';
 
 // Cache
-import { storeCache, loadCache, config } from '@iconify/core/lib/cache/storage';
+import { storeCache, loadCache } from '@iconify/core/lib/browser-storage';
+import {
+	IconifyBrowserCacheType,
+	IconifyBrowserCacheFunctions,
+	toggleBrowserCache,
+} from '@iconify/core/lib/browser-storage/functions';
 
 /**
  * Export required types
  */
+// Function sets
+export {
+	IconifyStorageFunctions,
+	IconifyBuilderFunctions,
+	IconifyBrowserCacheFunctions,
+	IconifyAPIFunctions,
+	IconifyAPIInternalFunctions,
+};
+
 // JSON stuff
 export { IconifyIcon, IconifyJSON, IconifyIconName };
 
@@ -90,167 +102,70 @@ export {
 	IconifyAPISendQuery,
 };
 
-/**
- * Exposed internal functions
- *
- * Used by plug-ins, such as Icon Finder
- *
- * Important: any changes published in a release must be backwards compatible.
- */
-export interface IconifyExposedInternals {
-	/**
-	 * Calculate width knowing height and width/height ratio (or vice versa)
-	 */
-	calculateSize: (
-		size: IconifyIconSize,
-		ratio: number,
-		precision?: number
-	) => IconifyIconSize;
-
-	/**
-	 * Get internal API data, used by Icon Finder
-	 */
-	getAPI: (provider: string) => IconifyAPIInternalStorage | undefined;
-
-	/**
-	 * Get API config, used by custom modules
-	 */
-	getAPIConfig: GetAPIConfig;
-
-	/**
-	 * Set API module
-	 */
-	setAPIModule: (provider: string, item: IconifyAPIModule) => void;
-}
+/* Browser cache */
+export { IconifyBrowserCacheType };
 
 /**
- * Cache types
+ * Enable and disable browser cache
  */
-export type IconifyCacheType = 'local' | 'session' | 'all';
+export const enableCache = (storage: IconifyBrowserCacheType) =>
+	toggleBrowserCache(storage, true);
 
+export const disableCache = (storage: IconifyBrowserCacheType) =>
+	toggleBrowserCache(storage, false);
+
+/* Storage functions */
 /**
- * Toggle cache
+ * Check if icon exists
  */
-function toggleCache(storage: IconifyCacheType, value: boolean): void {
-	switch (storage) {
-		case 'local':
-		case 'session':
-			config[storage] = value;
-			break;
-
-		case 'all':
-			for (const key in config) {
-				config[key] = value;
-			}
-			break;
-	}
-}
-
-export function enableCache(storage: IconifyCacheType): void {
-	toggleCache(storage, true);
-}
-
-export function disableCache(storage: IconifyCacheType): void {
-	toggleCache(storage, false);
-}
-
-/**
- * Get icon name
- */
-function _getIconName(name: string): IconifyIconName | null {
-	const icon = stringToIcon(name);
-	if (!validateIcon(icon)) {
-		return null;
-	}
-	return icon;
-}
+export const iconExists = storageFunctions.iconExists;
 
 /**
  * Get icon data
  */
-function _getIconData(icon: IconifyIconName): FullIconifyIcon | null {
-	return _getIcon(getStorage(icon.provider, icon.prefix), icon.name);
-}
-
-export function getIcon(name: string): Required<IconifyIcon> | null {
-	const icon = _getIconName(name);
-	return icon ? _getIconData(icon) : null;
-}
-
-/**
- * Check if icon exists
- */
-export function iconExists(name: string): boolean {
-	return getIcon(name) !== null;
-}
-
-/**
- * Load icons
- */
-export const loadIcons: IconifyLoadIcons = API.loadIcons;
+export const getIcon = storageFunctions.getIcon;
 
 /**
  * List available icons
  */
-export { listIcons };
+export const listIcons = storageFunctions.listIcons;
 
 /**
  * Add one icon
  */
-export function addIcon(name: string, data: IconifyIcon): boolean {
-	const icon = _getIconName(name);
-	if (!icon) {
-		return false;
-	}
-	const storage = getStorage(icon.provider, icon.prefix);
-	return addIconToStorage(storage, icon.name, data);
-}
+export const addIcon = storageFunctions.addIcon;
 
 /**
  * Add icon set
  */
-export function addCollection(data: IconifyJSON, provider?: string) {
-	if (typeof provider !== 'string') {
-		provider = typeof data.provider === 'string' ? data.provider : '';
-	}
+export const addCollection = storageFunctions.addCollection;
 
-	if (
-		typeof data !== 'object' ||
-		typeof data.prefix !== 'string' ||
-		!validateIcon({
-			provider,
-			prefix: data.prefix,
-			name: 'a',
-		})
-	) {
-		return false;
-	}
+/* Builder functions */
+/**
+ * Calculate icon size
+ */
+export const calculateSize = builderFunctions.calculateSize;
 
-	const storage = getStorage(provider, data.prefix);
-	return !!addIconSet(storage, data);
-}
+/**
+ * Replace unique ids in content
+ */
+export const replaceIDs = builderFunctions.replaceIDs;
+
+/* API functions */
+/**
+ * Load icons
+ */
+export const loadIcons = APIFunctions.loadIcons;
 
 /**
  * Add API provider
  */
-export { setAPIConfig as addAPIProvider };
+export const addAPIProvider = APIFunctions.addAPIProvider;
 
 /**
  * Export internal functions that can be used by third party implementations
  */
-export const internals: IconifyExposedInternals = {
-	// Calculate size
-	calculateSize: calcSize,
-
-	// Get API data
-	getAPI: getRedundancyCache,
-
-	// Get API config
-	getAPIConfig,
-
-	// Get API module
-	setAPIModule,
-};
+export const _api = APIInternalFunctions;
 
 /**
  * Stateful component
@@ -318,7 +233,7 @@ class DynamicComponent extends Component<StatefulProps, StatefulState> {
 	 */
 	_loaded(): boolean {
 		if (!this.state.loaded) {
-			const data = _getIconData(this.props.icon);
+			const data = getIconData(this.props.icon);
 			if (data) {
 				this._abort = null;
 				this.setState({
@@ -350,12 +265,12 @@ const component = (props: IconProps, func: typeof ReactIcon): JSX.Element => {
 
 	// Get icon data
 	if (typeof props.icon === 'string') {
-		const iconName = _getIconName(props.icon);
+		const iconName = stringToIcon(props.icon, true);
 		if (!iconName) {
 			return null;
 		}
 
-		iconData = _getIconData(iconName);
+		iconData = getIconData(iconName);
 
 		if (iconData) {
 			let staticProps: IconProps = {} as IconProps;
