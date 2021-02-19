@@ -1,13 +1,14 @@
-import { HTMLProps, SVGProps, createElement } from 'react';
-import { IconifyIcon, IconifyJSON } from '@iconify/types';
-import {
+import type { HTMLProps, SVGProps } from 'react';
+import React from 'react';
+import type { IconifyIcon, IconifyJSON } from '@iconify/types';
+import type {
 	IconifyIconCustomisations as IconCustomisations,
 	FullIconCustomisations,
-	defaults,
 	IconifyHorizontalIconAlignment,
 	IconifyVerticalIconAlignment,
 	IconifyIconSize,
 } from '@iconify/core/lib/customisations';
+import { defaults } from '@iconify/core/lib/customisations';
 import {
 	flipFromString,
 	alignmentFromString,
@@ -51,6 +52,9 @@ export interface IconifyIconProps extends IconifyIconCustomisations {
 	// Shorthand properties
 	flip?: string;
 	align?: string;
+
+	// Unique id, used as base for ids for shapes. Use it to get consistent ids for server side rendering
+	id?: string;
 }
 
 /**
@@ -59,10 +63,14 @@ export interface IconifyIconProps extends IconifyIconCustomisations {
 type IconifyElementProps = HTMLProps<HTMLElement>;
 type IconifySVGProps = SVGProps<SVGElement>;
 
+interface ReactRefProp {
+	ref?: typeof React.createRef;
+}
+
 /**
  * Mix of icon properties and HTMLElement properties
  */
-export type IconProps = IconifyElementProps & IconifyIconProps;
+export type IconProps = IconifyElementProps & IconifyIconProps & ReactRefProp;
 
 /**
  * Default SVG attributes
@@ -95,7 +103,8 @@ const storage: Record<string, Required<IconifyIcon>> = Object.create(null);
  */
 const component = (
 	props: IconProps,
-	defaults: FullIconCustomisations
+	defaults: FullIconCustomisations,
+	ref
 ): JSX.Element => {
 	// Split properties
 	const icon =
@@ -103,7 +112,7 @@ const component = (
 			? storage[props.icon]
 			: fullIcon(props.icon);
 	if (!icon) {
-		return null;
+		return React.createElement('span');
 	}
 
 	const customisations = merge(
@@ -111,6 +120,9 @@ const component = (
 		props as IconifyIconCustomisations
 	) as FullIconCustomisations;
 	const componentProps = merge(svgDefaults);
+
+	// Add reference
+	componentProps.ref = ref;
 
 	// Create style if missing
 	const style = typeof props.style === 'object' ? props.style : {};
@@ -173,7 +185,15 @@ const component = (
 	const item = iconToSVG(icon, customisations);
 
 	// Add icon stuff
-	componentProps.dangerouslySetInnerHTML = { __html: replaceIDs(item.body) };
+	let localCounter = 0;
+	const id = props.id;
+
+	componentProps.dangerouslySetInnerHTML = {
+		__html: replaceIDs(
+			item.body,
+			id ? () => id + '-' + localCounter++ : 'iconify-react-'
+		),
+	};
 	for (let key in item.attributes) {
 		componentProps[key] = item.attributes[key];
 	}
@@ -182,7 +202,7 @@ const component = (
 		style.verticalAlign = '-0.125em';
 	}
 
-	return createElement('svg', componentProps);
+	return React.createElement('svg', componentProps);
 };
 
 /**
@@ -190,15 +210,18 @@ const component = (
  *
  * @param props - Component properties
  */
-export const Icon = (props: IconProps) => component(props, defaults);
+export const Icon = React.forwardRef((props: IconProps, ref?) =>
+	component(props, defaults, ref)
+);
 
 /**
  * Inline icon (has negative verticalAlign that makes it behave like icon font)
  *
  * @param props - Component properties
  */
-export const InlineIcon = (props: IconProps) =>
-	component(props, inlineDefaults);
+export const InlineIcon = React.forwardRef((props: IconProps, ref?) =>
+	component(props, inlineDefaults, ref)
+);
 
 /**
  * Add icon to storage, allowing to call it by name
